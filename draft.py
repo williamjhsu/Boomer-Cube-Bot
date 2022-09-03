@@ -12,42 +12,55 @@ pickdata = [['Name', 'Pick', 'User', 'Cube']]
 
 #Stores their pool of picked cards and discord user. Store within drafts.
 class Player:
-
-    def hasPicked(self):
-        pack_nums = self.draft.pack_numbers()
-        return not (len(self.pack) + self.draft.currentPick == pack_nums[self.draft.currentPack-1]+1)
-
-    def pick(self, cardIndex):
-        #Checking if the card is in the pack.
-        if cardIndex <= (len(self.pack) - 1):
-            #Making sure they havent already picked
-            if not self.hasPicked():
-                asyncio.create_task(self.user.send('You have picked ' + self.pack[cardIndex].name + '.'))
-                self.pool.append(self.pack[cardIndex])
-                
-                temppickdata = []
-                tempcardname = str(self.pack[cardIndex].name) #Adding the card name to the temppickdata vector to append to file
-
-                self.pack.pop(cardIndex)
-                self.draft.checkPacks()
-
-                tempcardname = tempcardname.replace(',', " ") #Removing commas for CSV purposes
-                temppickdata.append(tempcardname)
-                temppickdata.append(len(self.pack)) #Adding pick #
-                temppickdata.append(self.user) #Adding the person who picked
-                temppickdata.append('x') #Noting which cube was used. Will add once I get this working
-                pickdata.append(temppickdata)
-                
-
     def __init__(self, user, draft):
         self.draft = draft
         self.pack = None
         self.pool = []
         self.missedpicks = 0
         self.user = user
-    
+        self._temp_pick_name = None
+        self._temp_pick_idx = -1
+
+        self._has_picked = False
+
     def __repr__(self):
         return self.user
+
+    def hasPicked(self):
+        return self._has_picked
+        # pack_nums = self.draft.pack_numbers()
+        # return not (len(self.pack) + self.draft.currentPick == pack_nums[self.draft.currentPack-1]+1)
+
+    def pick(self, cardIndex):
+        #Checking if the card is in the pack.
+        if cardIndex <= (len(self.pack) - 1):
+            self._has_picked = True
+            #Making sure they havent already picked
+            if not self.hasPicked():
+                asyncio.create_task(
+                    self.user.send('You have picked ' + self.pack[cardIndex].name + '.'))
+            else:
+                asyncio.create_task(
+                    self.user.send('You have switched picks to ' + self.pack[cardIndex].name + '.'))
+
+            self._temp_pick_name = str(self.pack[cardIndex].name) #Adding the card name to the temppickdata vector to append to file
+            self._temp_pick_idx = cardIndex
+            self.draft.checkPacks()
+
+    def validate_pick(self):
+        temppickdata = []
+        tempcardname = self._temp_pick_name.replace(',', " ") #Removing commas for CSV purposes
+        temppickdata.append(tempcardname)
+        temppickdata.append(len(self.pack)) #Adding pick #
+        temppickdata.append(self.user) #Adding the person who picked
+        temppickdata.append('x') #Noting which cube was used. Will add once I get this working
+        pickdata.append(temppickdata)
+        self.pool.append(self.pack[self._temp_pick_idx])
+        self.pack.pop(self._temp_pick_idx)
+        self._has_picked = False
+
+        # TODO: add to csv and save by server_id/draft/discord_id
+
 
 class Timer:
 
@@ -235,6 +248,10 @@ class Draft:
         #Checks if every player has picked.
         pack_nums = self.pack_numbers()
         if len([player for player in self.players if not player.hasPicked()]) == 0:
+            # validate all player picks
+            for player in self.players:
+                player.validate_pick()
+
             if self.currentPick < int(pack_nums[self.currentPack - 1]):
                 self.rotatePacks()
             elif self.currentPack >= len(self.pack_numbers()):
