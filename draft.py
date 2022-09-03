@@ -225,7 +225,8 @@ class Draft:
         """
         pack_str = ''
         for a, b in zip(reactions, pack):
-            pack_str += f'{a} :  [{b.name}] (<https://yugioh.fandom.com/wiki/{b.name.replace(" ", "_")}>)\n'
+            pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/{b.name.replace(" ", "_")}>)\n'
+
         return pack_str
 
         #Decides if its time to rotate or send a new pack yet.
