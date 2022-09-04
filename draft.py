@@ -38,12 +38,13 @@ class Player:
             #Making sure they havent already picked
             if not self.hasPicked():
                 asyncio.create_task(
-                    self.user.send('You have picked ' + self.pack[cardIndex].name + '.'))
+                    self.user.send('Pick: ' + self.pack[cardIndex].name + '.'))
             else:
                 asyncio.create_task(
-                    self.user.send('You have switched picks to ' + self.pack[cardIndex].name + '.'))
+                    self.user.send('Changed Pick: ' + self.pack[cardIndex].name + '.'))
 
-            self._temp_pick_name = str(self.pack[cardIndex].name) #Adding the card name to the temppickdata vector to append to file
+            self._temp_pick_name = str(self.pack[cardIndex].name)   # Adding the card name to the temppickdata vector
+                                                                    # to append to file
             self._temp_pick_idx = cardIndex
             self.draft.checkPacks()
 
@@ -88,14 +89,20 @@ class Timer:
         #     if not player.hasPicked() and self == self.draft.timer:
         #         player.missedpicks = player.missedpicks + 1
         #         if player.missedpicks == 2:
-        #             asyncio.create_task(player.user.send('Ran out of time. WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT! https://tenor.com/view/wandavision-wanda-this-will-be-warning-gif-20683220'))
+        #             asyncio.create_task(player.user.send('Ran out of time. WARNING! IF YOU MISS ONE MORE PICK YOU
+        #             WILL BE KICKED FROM THE DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE
+        #             DRAFT! WARNING! IF YOU MISS ONE MORE PICK YOU WILL BE KICKED FROM THE DRAFT!
+        #             https://tenor.com/view/wandavision-wanda-this-will-be-warning-gif-20683220'))
         #         if player.missedpicks == 3:
-        #             asyncio.create_task(player.user.send('Ran out of time. You have been kicked for missing 3 picks. Three strikes! you\'re out! https://tenor.com/view/strike-ponche-bateador-strike-out-swing-gif-15388719'))
+        #             asyncio.create_task(player.user.send('Ran out of time. You have been kicked for missing 3 picks.
+        #             Three strikes! you\'re out!
+        #             https://tenor.com/view/strike-ponche-bateador-strike-out-swing-gif-15388719'))
         #             self.draft.kick(player)
         #
         #
         #         else:
-        #             asyncio.create_task(player.user.send('Ran out of time. You have automatically picked the first card in the pack. Please pay attention to avoid wasting time!'))
+        #             asyncio.create_task(player.user.send('Ran out of time. You have automatically picked the first
+        #             card in the pack. Please pay attention to avoid wasting time!'))
         #             player.pick(0)
 
     def __init__(self, draft, length=150):
@@ -112,7 +119,8 @@ class Draft:
     def __init__(self, cube, channel):
         self.cube = cube[:]
         self.pool = cube[:]
-        self.players = [] #Was orginally a default value. Created very complicated errors with underlying objects and references in the Python interpter. Wasn't being used at the time anyway.
+        self.players = []   # Was orginally a default value. Created very complicated errors with underlying objects
+                            # and references in the Python interpter. Wasn't being used at the time anyway.
         self.channel = channel
         self.timer = None
         self.currentPick = -1
@@ -140,7 +148,9 @@ class Draft:
             i = i+int(pack_nums[self.currentPack-1])
             #splices reactions into pack
             packWithReactions = self._helper_cardnames(player.pack)
-            asyncio.create_task(send_pack_message("Here's your #" + str(self.currentPack) + " pack! React to select a card\n"+str(packWithReactions), player, pack))
+            asyncio.create_task(send_pack_message("Here's your #" + str(self.currentPack)
+                                                  + " pack! React to select a card\n"
+                                                  +str(packWithReactions), player, pack))
 
     def pack_numbers(self):
         """
@@ -226,7 +236,8 @@ class Draft:
         packs = [player.pack for player in self.players]
         for player in self.players:
             #Gives the player the next pack in the list. If that would be out of bounds give them the first pack.
-            player.pack = packs[0] if (packs.index(player.pack) + 1) >= len(packs) else packs[packs.index(player.pack) + 1]
+            player.pack = packs[0] if (packs.index(player.pack) + 1) \
+                                      >= len(packs) else packs[packs.index(player.pack) + 1]
             #splices reactions into pack
             packWithReactions = self._helper_cardnames(player.pack)
             asyncio.create_task(send_pack_message('Your next pack: \n'+str(packWithReactions), player, player.pack))
@@ -238,7 +249,28 @@ class Draft:
         """
         pack_str = ''
         for a, b in zip(reactions, pack):
-            pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/{b.name.replace(" ", "_")}>)\n'
+            # Card Errata print exceptions to display their errata page to have OG eff
+            if (f'{b.name}' == "Blast with Chain") \
+                    or (f'{b.name}' == "Brain Control") \
+                    or (f'{b.name}' == "Crush Card Virus")\
+                    or (f'{b.name}' == "Chaos Emperor Dragon")\
+                    or (f'{b.name}' == "Destiny HERO - Disk Commander")\
+                    or (f'{b.name}' == "Dark Magician of Chaos")\
+                    or (f'{b.name}' == "Exchange of the Spirit")\
+                    or (f'{b.name}' == "Imperial Order")\
+                    or (f'{b.name}' == "Makyura the Destructor")\
+                    or (f'{b.name}' == "Necrovalley")\
+                    or (f'{b.name}' == "Night Assailant")\
+                    or (f'{b.name}' == "Rescue Cat")\
+                    or (f'{b.name}' == "Ring of Destruction")\
+                    or (f'{b.name}' == "Sangan")\
+                    or (f'{b.name}' == "Sinister Serpent")\
+                    or (f'{b.name}' == "Witch of the Black Forest"):
+                pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/Card_Errata:' \
+                            f'{b.name.replace(" ", "_")}>)\n'
+            # else > print the main wiki card page
+            else:
+                pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/{b.name.replace(" ", "_")}>)\n'
 
         return pack_str
 
@@ -256,7 +288,8 @@ class Draft:
                 self.rotatePacks()
             elif self.currentPack >= len(self.pack_numbers()):
                 for player in self.players:
-                    asyncio.create_task(player.user.send('The draft is now finished. Use !ydk or !mypool to get started on deckbuilding.'))
+                    asyncio.create_task(player.user.send(
+                        'The draft is now finished. Use !ydk or !mypool to get started on deckbuilding.'))
                     self.leftover_distribution()
             else:
                 self.newPacks()
@@ -272,7 +305,8 @@ class Draft:
         asyncio.create_task(self.channel.send("A player has been kicked from the draft"))
 
 def sortPack(pack):
-    monsters = [card for card in pack if 'monster' in card.cardType.lower() and ('synchro' not in card.cardType.lower() and 'xyz' not in card.cardType.lower())]
+    monsters = [card for card in pack if 'monster' in card.cardType.lower()
+                and ('synchro' not in card.cardType.lower() and 'xyz' not in card.cardType.lower())]
     spells = [card for card in pack if 'spell' in card.cardType.lower()]
     traps = [card for card in pack if 'trap' in card.cardType.lower()]
     extras = [card for card in pack if 'xyz' in card.cardType.lower() or 'synchro' in card.cardType.lower()]
@@ -284,12 +318,15 @@ async def add_reactions(message, emojis):
 
 #This exists to allow making the pack messages async.
 async def send_pack_message(text, player, pack):
-    asyncio.create_task(add_reactions(await player.user.send(content=text, file=discord.File(fp=imagemanipulator.create_pack_image(pack),filename="image.jpg")), reactions[:len(pack)]))
+    asyncio.create_task(add_reactions(
+        await player.user.send(content=text,
+                               file=discord.File(fp=imagemanipulator.create_pack_image(pack),
+                                                 filename="image.jpg")), reactions[:len(pack)]))
 
 #send players message about gifted leftover cards
 async def gift_leftovers(cards, players):
     player_ind = 0
     for player in players:
-        if len(cards) != player_ind:
+        if len(cards) < player_ind:
             asyncio.create_task(player.user.send('These are your free cards: ' + cards[player_ind] + '.'))
         player_ind += 1
