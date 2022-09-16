@@ -20,7 +20,7 @@ class Player:
         self.user = user
         self._temp_pick_name = None
         self._temp_pick_idx = -1
-
+        self.picks = []
         self._has_picked = False
 
     def __repr__(self):
@@ -34,7 +34,6 @@ class Player:
     def pick(self, cardIndex):
         #Checking if the card is in the pack.
         if cardIndex <= (len(self.pack) - 1):
-            self._has_picked = True
             #Making sure they havent already picked
             if not self.hasPicked():
                 asyncio.create_task(
@@ -46,6 +45,7 @@ class Player:
             self._temp_pick_name = str(self.pack[cardIndex].name)   # Adding the card name to the temppickdata vector
                                                                     # to append to file
             self._temp_pick_idx = cardIndex
+            self._has_picked = True
             self.draft.checkPacks()
 
     def validate_pick(self):
@@ -285,13 +285,18 @@ class Draft:
                 player.validate_pick()
 
             if self.currentPick < int(pack_nums[self.currentPack - 1]):
+                for player in self.players:
+                    player.picks = []  # clear picks
                 self.rotatePacks()
             elif self.currentPack >= len(self.pack_numbers()):
                 for player in self.players:
+                    player.picks = []  # clear picks
                     asyncio.create_task(player.user.send(
                         'The draft is now finished. Use !ydk or !mypool to get started on deckbuilding.'))
                     self.leftover_distribution()
             else:
+                for player in self.players:
+                    player.picks = []  # clear picks
                 self.newPacks()
     
     def startDraft(self):

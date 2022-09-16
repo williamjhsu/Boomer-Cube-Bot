@@ -142,7 +142,16 @@ async def on_raw_reaction_add(payload):
             if user == player.user:
                     #100 used as a value thats larger than anything we use, so pick will ignore it.
                     cardIndex = reactions.index(str(reaction)) if str(reaction) in reactions else 100
-                    player.pick(cardIndex)
+                    # last message id
+                    last_message = channel.last()
+                    print(payload.message_id)
+                    print(last_message)
+                    # check if the reaction matches to the last pack message
+                    if payload.message_id == last_message:
+                        player.picks.append(cardIndex)
+                        # have to remove pick if messageReactionRemove from player.picks
+                        if len(player.picks) <= 1:  # there can only be one entry for card pick at a time
+                            player.pick(cardIndex)
                     return
 
 #Responds in chat to messages. 
