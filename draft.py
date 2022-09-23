@@ -17,7 +17,6 @@ reactions = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '
 
 # Starting with a list that will hold pick data
 pickdata = [['Name', 'Pick', 'User', 'Cube', 'Pack']]
-MAX_PACK_SIZE = 20
 
 
 # Stores their pool of picked cards and discord user. Store within drafts.
@@ -82,16 +81,6 @@ class Player:
         temppickdata.append(card_str_arr)
         pickdata.append(temppickdata)
         self.has_picked = False
-
-    def add_extra_card(self, card):
-        """
-        assuming at end of draft
-        """
-        temppickdata = [card.name, 0, self.user.id, 'x']
-        card_str_arr = ""
-        temppickdata.append(card_str_arr)
-        pickdata.append(temppickdata)
-        self.pool.append(card)
 
 
 class Draft:
@@ -231,7 +220,7 @@ class Draft:
         :param rounded:
         :return: list
         """
-        if rounded <= MAX_PACK_SIZE:  # if the list is already <= 20, then no splitting
+        if rounded <= 20:  # if the list is already <= 20, then no splitting
             return [rounded]
 
         splitting = 1
@@ -241,7 +230,7 @@ class Draft:
         cards_per_pack.append(math.ceil(rounded))
         cards_per_pack.append(math.floor(rounded))
 
-        if rounded <= MAX_PACK_SIZE:  # if the list is already <= 20, then no splitting
+        if rounded <= 20:  # if the list is already <= 20, then no splitting
             return [rounded]
 
         while splitting:
@@ -249,7 +238,7 @@ class Draft:
                 copy_list.append(math.ceil(a / 2))
                 copy_list.append(math.floor(a / 2))
             cards_per_pack = copy_list
-            if cards_per_pack[0] <= MAX_PACK_SIZE:  # first element will always be the highest number
+            if cards_per_pack[0] <= 20:  # first element will always be the highest number
                 splitting = 0
 
         return cards_per_pack
@@ -262,15 +251,22 @@ class Draft:
         :param
         :return:
         """
-        leftover_cards = self.pool
-        print(leftover_cards)
-        for i in range(len(leftover_cards)):
-            player_idx = i % len(self.players)
-            self.players[player_idx].add_extra_card(leftover_cards[i])
-            asyncio.create_task(gift_leftovers(leftover_cards[i], self.players[player_idx]))
-        # if want to empty pool as well
-        self.pool = []
-        self.save_draft()
+        player_id = 0
+        cards_to_players = []
+        for x in self.players:  # make list of lists with number of players
+            cards_to_players.append([])
+
+        gifted_cards = []
+        for a in self.pool:  # only called when JUST the leftover cards are left in the pool
+            if player_id > len(self.players) - 1:  # wrap around if still more cards
+                player_id = 0
+            cards_to_players[player_id].append(a.name)
+            player_id += 1
+
+        player_id = 0
+        for y in self.players:  # send message of leftover cards to players
+            asyncio.create_task(gift_leftovers(cards_to_players[player_id], self.players))
+            player_id += 1
 
     def rotatePacks(self):
         self.currentPick += 1
@@ -329,8 +325,8 @@ class Draft:
             for player in self.players:
                 player.picks = []  # clear picks
                 asyncio.create_task(player.user.send(
-                    'The draft is now finished. Use !ydk or !mypool to get started on deckbuilding.'))
-            self.leftover_distribution()
+                    'The finished draft is resumed. Use !ydk or !mypool to get started on deckbuilding.'))
+                self.leftover_distribution()
         else:  # new draft
             for player in self.players:
                 player.picks = []  # clear picks
@@ -356,7 +352,7 @@ class Draft:
                     player.picks = []  # clear picks
                     asyncio.create_task(player.user.send(
                         'The draft is now finished. Use !ydk or !mypool to get started on deckbuilding.'))
-                self.leftover_distribution()
+                    self.leftover_distribution()
             else:  # new draft
                 for player in self.players:
                     player.picks = []  # clear picks
@@ -400,5 +396,9 @@ async def send_pack_message(text, player, pack):
 
 
 # send players message about gifted leftover cards
-async def gift_leftovers(card, player):
-    asyncio.create_task(player.user.send('These are your free cards: ' + card.name + '.'))
+async def gift_leftovers(cards, players):
+    player_ind = 0
+    for player in players:
+        if len(cards) < player_ind:
+            asyncio.create_task(player.user.send('This your free card: ' + cards[player_ind] + '.'))
+        player_ind += 1
