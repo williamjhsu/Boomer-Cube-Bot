@@ -221,9 +221,16 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if '!commands' in message.content.lower():
+    if '!commands' in message.content.lower() or '!commands' in message.content.lower():
         await message.channel.send(
-            "Commands for all users: \n !joindraft: Signs up for an open draft \n !leavedraft: De-registers the player \n !currentplayers: Lists the players currently registered for a draft \n !mypool: Lists the contents of the players draft pool \n !ydk: Exports the users card pool as a YDK file \n \n Commands that require the Host, Moderator, or Admin role: \n !!createdraft: Creates a draft that players can register for. Requires the name of the cube (eg list.cub) \n !!startdraft: Begins the draft - B3O will send packs to registered players \n ")
+            "Commands for all users: \n !joindraft: Signs up for an open draft \n !leavedraft: De-registers the "
+            "player \n !currentplayers: Lists the players currently registered for a draft \n !mypool: Lists the "
+            "contents of the players draft pool \n !ydk: Exports the users card pool as a YDK file \n \n Commands "
+            "that require the Host, Moderator, or Admin role: \n !!createdraft: Creates a draft that players can "
+            "register for. Requires the name of the cube (eg list.cub) \n !!startdraft: Begins the draft - B3O will "
+            "send packs to registered players \n "
+            " !!loaddraft reloads the last played draft\n"
+            " !!resumedraft resumes a loaded draft\n")
 
     if '!joindraft' in message.content.lower():
         # Makes sure there is both a draft in this channel, that draft hasnt started yet, and that the player isnt already in a draft.
@@ -257,7 +264,7 @@ async def on_message(message):
         else:
             await message.channel.send('There is no draft in this channel currently.')
 
-    if detect_command(message, "!!loaddraft"):
+    if detect_command(message, "!!loaddraft", admin_command=True):
         print("loading draft")
         draft = Draft.reload_draft(message.channel, client, card_map)
         if draft is None:
@@ -268,7 +275,7 @@ async def on_message(message):
         messagestring = message.content.lower()
         return
 
-    if detect_command(message, "!!resumedraft"):
+    if detect_command(message, "!!resumedraft", admin_command=True):
         if message.channel in drafts:
             await message.channel.send('Resuming draft...')
             drafts[message.channel].resume_draft()
