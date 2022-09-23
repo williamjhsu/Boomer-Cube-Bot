@@ -163,7 +163,7 @@ async def on_raw_reaction_add(payload):
                 # 100 used as a value thats larger than anything we use, so pick will ignore it.
                 cardIndex = reactions.index(str(reaction)) if str(reaction) in reactions else 100
                 # last message id
-                print(f"sent to {payload.user_id}: {payload.message_id}")
+                # (f"sent to {payload.user_id}: {payload.message_id}")
                 # check if the reaction matches to the last pack message
                 player.picks.append(cardIndex)
                 # have to remove pick if messageReactionRemove from player.picks
@@ -191,7 +191,7 @@ async def on_raw_reaction_remove(payload):
             if user == player.user and payload.message_id == player.current_message_id:
                 cardIndex = reactions.index(str(reaction)) if str(reaction) in reactions else 100
                 # last message id
-                print(f"sent to {payload.user_id}: {payload.message_id}")
+                # print(f"sent to {payload.user_id}: {payload.message_id}")
                 # check if the reaction matches to the last pack message
                 asyncio.create_task(player.user.send('You have unselected a card'))
                 player.picks.remove(cardIndex)
