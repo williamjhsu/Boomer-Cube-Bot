@@ -26,7 +26,7 @@ def cache_all_images():
 
 #Downloads both the large and small card images and writes them as BLOBs to the database file.
 def cache_card_images(card):
-    print('Cacheing ' + str(card.id) + '...')
+    # print('Cacheing ' + str(card.id) + '...')
     image = urlopen(get_image_url(card)).read()
     #Small images currently unused.
     smallImage = image
