@@ -64,8 +64,8 @@ class Player:
 
     def validate_pick(self):
         temppickdata = []
-        tempcardname = self._temp_pick_name.replace(',', " ")  # Removing commas for CSV purposes
-        temppickdata.append(tempcardname)
+        # tempcardname = self._temp_pick_name.replace(',', " ")  # Removing commas for CSV purposes
+        temppickdata.append(self._temp_pick_name)
         temppickdata.append(len(self.cards_in_pack))  # Adding pick #
         temppickdata.append(self.user.id)  # Adding the person who picked
         temppickdata.append('x')  # Noting which cube was used. Will add once I get this working
