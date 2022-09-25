@@ -163,7 +163,7 @@ async def on_raw_reaction_add(payload):
                 # 100 used as a value thats larger than anything we use, so pick will ignore it.
                 cardIndex = reactions.index(str(reaction)) if str(reaction) in reactions else 100
                 # last message id
-                print(f"sent to {payload.user_id}: {payload.message_id}")
+                # print(f"sent to {payload.user_id}: {payload.message_id}")
                 # check if the reaction matches to the last pack message
                 player.picks.append(cardIndex)
                 # have to remove pick if messageReactionRemove from player.picks
@@ -191,7 +191,7 @@ async def on_raw_reaction_remove(payload):
             if user == player.user and payload.message_id == player.current_message_id:
                 cardIndex = reactions.index(str(reaction)) if str(reaction) in reactions else 100
                 # last message id
-                print(f"sent to {payload.user_id}: {payload.message_id}")
+                # print(f"sent to {payload.user_id}: {payload.message_id}")
                 # check if the reaction matches to the last pack message
                 asyncio.create_task(player.user.send('You have unselected a card'))
                 player.picks.remove(cardIndex)
@@ -204,7 +204,10 @@ async def on_raw_reaction_remove(payload):
 
 def detect_command(sent_message, detect_message, admin_command=False):
     if admin_command:
-        if not ('Admin' in str(sent_message.author.roles) or 'Moderator' in str(sent_message.author.roles) or 'Host'):
+        try:
+            if not ('Admin' in str(sent_message.author.roles) or 'Moderator' in str(sent_message.author.roles) or 'Host'):
+                return False
+        except:
             return False
     return sent_message.content[0:len(detect_message)] == detect_message
 
@@ -288,7 +291,7 @@ async def on_message(message):
             for key in cubes.keys():
                 if len(message.content.lower().split()) > 1 and key == message.content.lower().split()[1]:
                     drafts[message.channel] = Draft(cubes[key], message.channel)
-                    print(drafts[message.channel])
+                    # print(drafts[message.channel])
                     await message.channel.send('Draft created. Players can now join.')
                     messagestring = message.content.lower()
                     return

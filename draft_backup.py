@@ -15,7 +15,7 @@ class Player:
 
     def hasPicked(self):
         pack_nums = self.draft.pack_numbers()
-        print(pack_nums)
+        # print(pack_nums)
         return not (len(self.pack) + self.draft.currentPick == pack_nums[self.draft.currentPack-1]+1)
 
     def pick(self, cardIndex):

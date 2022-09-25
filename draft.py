@@ -110,8 +110,8 @@ class Draft:
 
         # save draft meta data
         with open(f'{draft_dir}/objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-            print(self.cube, self.pool,
-                  self.currentPick, self.currentPack)
+            #print(self.cube, self.pool,
+                  # self.currentPick, self.currentPack)
             pickle.dump([self.currentPick, self.currentPack, self.cube, self.pool], f)
 
     @classmethod
@@ -122,7 +122,7 @@ class Draft:
             return None
         with open(f"{draft_dir}/objs.pkl", "rb") as f:
             current_pick, current_pack, cube, pool = pickle.load(f)
-        print(cube, pool, current_pick, current_pack)
+        # print(cube, pool, current_pick, current_pack)
         draft = cls(cube, draft_channel)
         draft.cube = cube
         draft.pool = pool
@@ -151,7 +151,7 @@ class Draft:
             if isinstance(arr[4], str):
                 pack = arr[4].split("|")
                 pack = [card_map[p] for p in pack]
-                print(pack)
+                # print(pack)
                 user_pack_map[user] = pack
         # append players to draft
         for key, items in user_card_map.items():
@@ -162,8 +162,8 @@ class Draft:
                 player.pool.append(item)
             player.cards_in_pack = user_pack_map[key]
             draft.players.append(player)
-            print(f"added player {user.name}, with cards:\n"
-                  f"{player.pool}")
+            # print(f"added player {user.name}, with cards:\n"
+                  # f"{player.pool}")
 
         return draft
 
@@ -207,7 +207,7 @@ class Draft:
         leftover_cards = len(self.cube) % player_num
         if leftover_cards != 0:  # if 1000/number of players isn't a whole number
             rounded_num = math.floor(len(self.cube) / player_num)
-            print("leftover_cards")
+            # print("leftover_cards")
         else:
             rounded_num = len(self.cube) / player_num
 
@@ -225,7 +225,6 @@ class Draft:
 
         splitting = 1
         cards_per_pack = []
-        copy_list = []
         rounded /= 2
         cards_per_pack.append(math.ceil(rounded))
         cards_per_pack.append(math.floor(rounded))
@@ -235,6 +234,7 @@ class Draft:
 
         while splitting:
             for a in cards_per_pack:
+                copy_list = []
                 copy_list.append(math.ceil(a / 2))
                 copy_list.append(math.floor(a / 2))
             cards_per_pack = copy_list
@@ -391,7 +391,7 @@ async def send_pack_message(text, player, pack):
                                  file=discord.File(fp=imagemanipulator.create_pack_image(pack),
                                                    filename="image.jpg"))
     player.current_message_id = msg.id
-    print(msg.id)
+    # print(msg.id)
     asyncio.create_task(add_reactions(msg, reactions[:len(pack)]))
 
 

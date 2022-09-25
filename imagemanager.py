@@ -13,11 +13,11 @@ cursor = connection.cursor()
 
 #Takes a few minutes to run depending on cube size.
 def cache_all_images():
-    print('Cacheing all images...')
+    # print('Cacheing all images...')
     for cub in os.listdir('cubes'):
         cubeJson = json.load(open('cubes/' + cub, "r"))
         for card in cubeJson:
-            print(card["name"])
+            # print(card["name"])
             result = cursor.execute('SELECT image FROM images WHERE id = ?', [card['id']]).fetchone()
             if result is None:
                 cache_card_images(cardJsonToCardInfo(card))
