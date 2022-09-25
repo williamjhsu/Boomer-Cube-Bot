@@ -191,6 +191,7 @@ class Draft:
             asyncio.create_task(send_pack_message("Here's your #" + str(self.currentPack)
                                                   + " pack! React to select a card\n"
                                                   + str(packWithReactions), player, pack))
+        self.save_draft()
 
     def pack_numbers(self):
         """
@@ -233,8 +234,8 @@ class Draft:
             return [rounded]
 
         while splitting:
+            copy_list = []
             for a in cards_per_pack:
-                copy_list = []
                 copy_list.append(math.ceil(a / 2))
                 copy_list.append(math.floor(a / 2))
             cards_per_pack = copy_list

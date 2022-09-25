@@ -268,7 +268,7 @@ async def on_message(message):
             await message.channel.send('There is no draft in this channel currently.')
 
     if detect_command(message, "!!loaddraft", admin_command=True):
-        print("loading draft")
+        print("Loading draft")
         draft = Draft.reload_draft(message.channel, client, card_map)
         if draft is None:
             await message.channel.send('No Draft has been saved.')
@@ -303,6 +303,7 @@ async def on_message(message):
                 message.author.roles):  # Only admins, mods or draft hosts can do this command
             # Confirms there is a unstarted draft in the channel.
             if message.channel in drafts and drafts[message.channel].currentPack == 0:
+                print("Starting draft")
                 await message.channel.send(
                     'The draft is starting! All players have received their first pack. Good luck!')
                 drafts[message.channel].startDraft()
