@@ -36,6 +36,7 @@ class Player:
         self.has_picked = False
         self.current_message_id = ""
         self.selected_arr = []
+        self.temppickdata = []
 
     def __repr__(self):
         return self.user
@@ -44,6 +45,9 @@ class Player:
         return self.has_picked
         # pack_nums = self.draft.pack_numbers()
         # return not (len(self.pack) + self.draft.currentPick == pack_nums[self.draft.currentPack-1]+1)
+
+    def finished_pack(self):
+        return len(self.cards_in_pack) == 0
 
     def pick(self, cardIndex):
         # Checking if the card is in the pack.
@@ -71,6 +75,11 @@ class Player:
         temppickdata.append('x')  # Noting which cube was used. Will add once I get this working
         self.pool.append(self.cards_in_pack[self._temp_pick_idx])
         self.cards_in_pack.pop(self._temp_pick_idx)
+        self.has_picked = False
+        self.temppickdata = temppickdata
+
+    def save_pick(self):
+        temppickdata = self.temppickdata
         card_str_arr = ""
         idx = 0
         for card in self.cards_in_pack:
@@ -80,7 +89,6 @@ class Player:
             idx += 1
         temppickdata.append(card_str_arr)
         pickdata.append(temppickdata)
-        self.has_picked = False
 
 
 class Draft:
@@ -191,7 +199,6 @@ class Draft:
             asyncio.create_task(send_pack_message("Here's your #" + str(self.currentPack)
                                                   + " pack! React to select a card\n"
                                                   + str(packWithReactions), player, pack))
-        self.save_draft()
 
     def pack_numbers(self):
         """
@@ -344,11 +351,18 @@ class Draft:
 
             self.save_draft()
                 # save drafts
-            if self.currentPick < int(pack_nums[self.currentPack - 1]):  #
+
+            if not self.players[0].finished_pack():  # still have cards in current pack
+                for player in self.players:
+                    player.save_pick()
+                self.save_draft()
                 for player in self.players:
                     player.picks = []  # clear picks
                 self.rotatePacks()
             elif self.currentPack >= len(self.pack_numbers()):  # draft complete
+                for player in self.players:
+                    player.save_pick()
+                self.save_draft()
                 for player in self.players:
                     player.picks = []  # clear picks
                     asyncio.create_task(player.user.send(
@@ -358,6 +372,9 @@ class Draft:
                 for player in self.players:
                     player.picks = []  # clear picks
                 self.newPacks()
+                for player in self.players:
+                    player.save_pick()
+                self.save_draft()
 
 
     def startDraft(self):
