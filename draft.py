@@ -315,6 +315,9 @@ class Draft:
                     or (f'{b.name}' == "Witch of the Black Forest"):
                 pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/Card_Errata:' \
                             f'{b.name.replace(" ", "_")}>)\n'
+            # exception for labyrinth of nightmare
+            elif (f'{b.name}' == "Labyrinth of Nightmare"):
+                pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/Labyrinth_of_Nightmare_(card)>)\n'
             # else > print the main wiki card page
             else:
                 pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/{b.name.replace(" ", "_")}>)\n'
