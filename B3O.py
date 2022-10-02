@@ -231,9 +231,11 @@ async def on_message(message):
             "the users card pool as a YDK file \n \n Commands that require the Host, Moderator, or Admin role: "
             " \n !!createdraft: Creates a draft that players can "
             "register for. Requires the name of the cube (eg list.cub) \n !!startdraft: Begins the draft - B3O will "
-            "send packs to registered players \n "
+            "send packs to registered players \n"
             " !!loaddraft reloads the last played draft\n"
-            " !!resumedraft resumes a loaded draft\n")
+            " !!resumedraft resumes a loaded draft\n"
+            " !haspicked lists all players who have not picked\n"
+            " !unpickall sets the current picks to None regardless of emotes\n")
 
     if '!joindraft' in message.content.lower():
         # Makes sure there is both a draft in this channel, that draft hasnt started yet, and that the player isnt already in a draft.
@@ -266,6 +268,23 @@ async def on_message(message):
             await message.channel.send([player.user.name for player in drafts[message.channel].players])
         else:
             await message.channel.send('There is no draft in this channel currently.')
+
+    if detect_command(message, "!haspicked", admin_command=False):
+        for draft in drafts:
+            for player in drafts[draft].players:
+                if player.user == message.author:
+                    draft = drafts[draft]
+                    pick_count, bad_players = draft.get_players_pick_count()
+                    await message.channel.send(f'{pick_count}/{len(draft.players)} have picked')
+                    return
+
+    if detect_command(message, "!unpickall"):
+        for draft in drafts:
+            for player in drafts[draft].players:
+                if player.user == message.author:
+                    player.picks = []
+                    player.has_picked = False
+                    await message.channel.send(f'Forced unpicked all of your card, try picking again')
 
     if detect_command(message, "!!loaddraft", admin_command=True):
         print("Loading draft")
