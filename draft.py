@@ -41,11 +41,6 @@ class Player:
     def __repr__(self):
         return self.user
 
-    def hasPicked(self):
-        return self.has_picked
-        # pack_nums = self.draft.pack_numbers()
-        # return not (len(self.pack) + self.draft.currentPick == pack_nums[self.draft.currentPack-1]+1)
-
     def finished_pack(self):
         return len(self.cards_in_pack) == 0
 
@@ -53,7 +48,7 @@ class Player:
         # Checking if the card is in the pack.
         if cardIndex <= (len(self.cards_in_pack) - 1):
             # Making sure they havent already picked
-            if not self.hasPicked():
+            if not self.has_picked:
                 asyncio.create_task(
                     self.user.send('Pick: ' + self.cards_in_pack[cardIndex].name + '.'))
             else:
@@ -107,6 +102,17 @@ class Draft:
         self.channel = channel
         self.currentPick = -1
         self.currentPack = 0
+        self.is_reversed = False
+
+    def get_players_pick_count(self):
+        picked = 0
+        has_not_picked = []
+        for player in self.players:
+            if len(player.picks) == 1:
+                picked += 1
+            else:
+                has_not_picked.append(player)
+        return picked, has_not_picked
 
     def save_draft(self):
         # save cards
@@ -120,7 +126,7 @@ class Draft:
         with open(f'{draft_dir}/objs.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
             #print(self.cube, self.pool,
                   # self.currentPick, self.currentPack)
-            pickle.dump([self.currentPick, self.currentPack, self.cube, self.pool], f)
+            pickle.dump([self.currentPick, self.currentPack, self.cube, self.pool, self.is_reversed], f)
 
     @classmethod
     def reload_draft(cls, draft_channel, client, card_map):
@@ -129,13 +135,14 @@ class Draft:
         if not os.path.exists(f'{draft_dir}/objs.pkl'):
             return None
         with open(f"{draft_dir}/objs.pkl", "rb") as f:
-            current_pick, current_pack, cube, pool = pickle.load(f)
+            current_pick, current_pack, cube, pool, is_reveresed = pickle.load(f)
         # print(cube, pool, current_pick, current_pack)
         draft = cls(cube, draft_channel)
         draft.cube = cube
         draft.pool = pool
         draft.currentPick = int(current_pick)
         draft.currentPack = int(current_pack)
+        draft.is_reversed = is_reveresed
 
         # load player data
         df = pd.read_csv(f'{draft_dir}/draftfile.csv')
@@ -172,7 +179,8 @@ class Draft:
             draft.players.append(player)
             # print(f"added player {user.name}, with cards:\n"
                   # f"{player.pool}")
-
+        if is_reveresed:
+            draft.players.reverse()
         return draft
 
     def newPacks(self):  # TODO get rid of separated functions of rotate
@@ -183,6 +191,7 @@ class Draft:
         self.currentPick = 1
         self.currentPack += 1
         self.players.reverse()
+        self.is_reversed = not self.is_reversed
 
         pack_nums = self.pack_numbers()
         FullList = random.sample(self.pool, len(self.players) * int(pack_nums[self.currentPack - 1]))
@@ -313,14 +322,14 @@ class Draft:
                     or (f'{b.name}' == "Sangan") \
                     or (f'{b.name}' == "Sinister Serpent") \
                     or (f'{b.name}' == "Witch of the Black Forest"):
-                pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/Card_Errata:' \
+                pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/Card_Errata:' \
                             f'{b.name.replace(" ", "_")}>)\n'
             # exception for labyrinth of nightmare
             elif (f'{b.name}' == "Labyrinth of Nightmare"):
-                pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/Labyrinth_of_Nightmare_(card)>)\n'
+                pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/Labyrinth_of_Nightmare_(card)>)\n'
             # else > print the main wiki card page
             else:
-                pack_str += f'{a} :  [{b.name}](<https://yugioh.fandom.com/wiki/{b.name.replace(" ", "_")}>)\n'
+                pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/{b.name.replace(" ", "_")}>)\n'
 
         return pack_str
 
@@ -331,26 +340,30 @@ class Draft:
         if self.currentPick < int(pack_nums[self.currentPack - 1]):  #
             for player in self.players:
                 player.picks = []  # clear picks
+                player.has_picked = False
             self.rotatePacks()
         elif self.currentPack >= len(self.pack_numbers()):  # draft complete
             for player in self.players:
                 player.picks = []  # clear picks
+                player.has_picked = False
                 asyncio.create_task(player.user.send(
                     'The finished draft is resumed. Use !ydk or !mypool to get started on deckbuilding.'))
                 self.leftover_distribution()
         else:  # new draft
             for player in self.players:
                 player.picks = []  # clear picks
+                player.has_picked = False
             self.newPacks()
 
     def checkPacks(self):
         # Checks if every player has picked.
         pack_nums = self.pack_numbers()
-        if len([player for player in self.players if not player.hasPicked()]) == 0:  # rotating to new packs
+        if len([player for player in self.players if not player.has_picked]) == 0:  # rotating to new packs
             # validate all player picks
             for player in self.players:
                 player.validate_pick()
                 player.picks = []
+                player.has_picked = False
 
             self.save_draft()
                 # save drafts
@@ -361,6 +374,7 @@ class Draft:
                 self.save_draft()
                 for player in self.players:
                     player.picks = []  # clear picks
+                    player.has_picked = False
                 self.rotatePacks()
             elif self.currentPack >= len(self.pack_numbers()):  # draft complete
                 for player in self.players:
@@ -368,12 +382,14 @@ class Draft:
                 self.save_draft()
                 for player in self.players:
                     player.picks = []  # clear picks
+                    player.has_picked = False
                     asyncio.create_task(player.user.send(
                         'The draft is now finished. Use !ydk or !mypool to get started on deckbuilding.'))
                     self.leftover_distribution()
             else:  # new draft
                 for player in self.players:
                     player.picks = []  # clear picks
+                    player.has_picked = False
                 self.newPacks()
                 for player in self.players:
                     player.save_pick()
