@@ -321,12 +321,18 @@ class Draft:
                     or (f'{b.name}' == "Ring of Destruction") \
                     or (f'{b.name}' == "Sangan") \
                     or (f'{b.name}' == "Sinister Serpent") \
-                    or (f'{b.name}' == "Witch of the Black Forest"):
+                    or (f'{b.name}' == "Witch of the Black Forest")\
+                    or (f'{b.name}' == "Temple of the Kings"):
                 pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/Card_Errata:' \
                             f'{b.name.replace(" ", "_")}>)\n'
             # exception for labyrinth of nightmare
             elif (f'{b.name}' == "Labyrinth of Nightmare"):
                 pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/Labyrinth_of_Nightmare_(card)>)\n'
+            # exception for sasuke samurais
+            elif (f'{b.name}' == "Sasuke Samurai #2"):
+                pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/Sasuke_Samurai_2>)\n'
+            elif (f'{b.name}' == "Sasuke Samurai #4"):
+                pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/Sasuke_Samurai_4>)\n'
             # else > print the main wiki card page
             else:
                 pack_str += f'{a} :  [{b.name}](<https://yugipedia.com/wiki/{b.name.replace(" ", "_")}>)\n'
